@@ -2,7 +2,7 @@ require('dotenv').config();
 const { Client } = require('pg');
 
 // Render의 환경변수(DATABASE_URL)를 사용합니다.
-const connectionString = process.env.DATABASE_URL;
+const connectionString = process.env.DATABAE_URL;
 
 const client = new Client({
   connectionString: connectionString,

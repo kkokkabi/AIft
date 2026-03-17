@@ -1,37 +1,31 @@
 require('dotenv').config();
 const { Client } = require('pg');
+const express = require('express'); // Express 추가
+const app = express();
+const port = process.env.PORT || 3000; // Render는 PORT 환경변수를 자동으로 부여합니다.
 
-// Render의 환경변수(DATABASE_URL)를 사용합니다.
 const connectionString = process.env.DATABASE_URL;
 
-const client = new Client({
-  connectionString: connectionString,
-  ssl: {
-    rejectUnauthorized: false // Neon(PostgreSQL) 연결 시 SSL 설정이 필요합니다.
-  }
-});
+app.get('/', async (req, res) => {
+  const client = new Client({
+    connectionString: connectionString,
+    ssl: { rejectUnauthorized: false }
+  });
 
-async function getTestData() {
   try {
     await client.connect();
-    console.log("✅ 데이터베이스에 성공적으로 연결되었습니다.");
-
-    // test 테이블에서 레코드 하나만 조회 (가장 최근 혹은 첫 번째 데이터)
-    const res = await client.query('SELECT name FROM test LIMIT 1');
-
-    if (res.rows.length > 0) {
-      const name = res.rows[0].name;
-      console.log(`-----------------------`);
-      console.log(`HELLO ${name}`);
-      console.log(`-----------------------`);
-    } else {
-      console.log("데이터가 없습니다. 테이블에 레코드를 추가해 주세요.");
-    }
+    const result = await client.query('SELECT name FROM test LIMIT 1');
+    const name = result.rows.length > 0 ? result.rows[0].name : "데이터 없음";
+    
+    res.send(`<h1>HELLO ${name}</h1>`); // 웹 브라우저에 결과 출력
   } catch (err) {
-    console.error("❌ 에러 발생:", err.stack);
+    res.status(500).send("에러 발생: " + err.message);
   } finally {
     await client.end();
   }
-}
+});
 
-getTestData();
+// 서버를 계속 켜두는 부분
+app.listen(port, () => {
+  console.log(`🚀 서버가 포트 ${port}에서 실행 중입니다.`);
+});
